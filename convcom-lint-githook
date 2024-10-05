@@ -1,0 +1,36 @@
+#!/bin/sh
+
+commit_msg_file="$1"
+
+commit_msg=$(cat "$commit_msg_file")
+
+first_line=$(head -n1 "$commit_msg_file")
+
+conventional_regex="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([\w\-\s]+\))?!?: .{1,}"
+
+if ! echo "$first_line" | grep -iqE "$conventional_regex"; then
+  echo "Error: Commit message does not follow the Conventional Commits format."
+  echo ""
+  echo "Proper format is: <type>(<scope>): <description>"
+  echo ""
+  echo "Allowed types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
+  echo "Scope is optional and can be anything specifying the place of the commit change."
+  echo ""
+  echo "Example: feat(parser): add ability to parse arrays"
+  exit 1
+fi
+
+# Check if the last line matches the "Refs: https://..." pattern
+last_line=$(grep -v '^\s*$' "$commit_msg_file" | tail -n1)
+
+refs_regex="^Refs: https?://.+"
+
+if ! echo "$last_line" | grep -iqE "$refs_regex"; then
+  echo "Error: Commit message must end with 'Refs: ' followed by a URL."
+  echo ""
+  echo "Example:"
+  echo "Refs: https://example.com/issue/123"
+  exit 1
+fi
+
+exit 0
